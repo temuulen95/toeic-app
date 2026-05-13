@@ -97,6 +97,16 @@ export default function ExplanationPanel({ result, onExplanationReady }: Props) 
         <div className="text-slate-400 text-sm">解説を生成中...</div>
       ) : parsed ? (
         <>
+          {/* Emoji large display */}
+          {result.question.word.emoji && (
+            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-amber-100">
+              <span className="text-5xl">{result.question.word.emoji}</span>
+              <div>
+                <div className="font-black text-slate-800 text-lg">{result.question.word.word}</div>
+                <div className="text-sm text-amber-700 font-bold">{result.question.word.meaning}</div>
+              </div>
+            </div>
+          )}
           <p className="text-slate-700 text-sm leading-relaxed">{parsed.explanation}</p>
           <div className="space-y-2">
             <div className="bg-white rounded-xl p-3 border border-amber-100">

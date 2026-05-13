@@ -10,8 +10,8 @@ function shuffle<T>(array: T[]): T[] {
 }
 
 function makeQuestion(word: Word, wrong: Word): Question {
-  const direction: QuizDirection =
-    Math.random() < 0.5 ? "en_to_ja" : "ja_to_en";
+  // Always en_to_ja: English word as prompt, emoji as hint, Japanese as choices
+  const direction: QuizDirection = "en_to_ja";
 
   const correctAnswer =
     direction === "en_to_ja" ? word.meaning : word.word;

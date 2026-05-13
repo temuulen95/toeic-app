@@ -26,6 +26,7 @@ export interface Word {
   level?: number;
   example_scene?: string;
   similar?: string;
+  emoji?: string;
 }
 
 export type QuizDirection = "en_to_ja" | "ja_to_en";

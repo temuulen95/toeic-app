@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Question, QuizResult, WordExplanation } from "@/lib/types";
 import { playCorrect, playIncorrect, playComboJingle } from "@/lib/sounds";
 import ExplanationPanel from "./ExplanationPanel";
+import SentenceBuilder from "./SentenceBuilder";
 
 interface Props {
   question: Question;
@@ -16,12 +17,27 @@ interface Props {
   onExplanationReady: (exp: WordExplanation) => void;
   combo: number;
   remainingForNext: number;
+  motivation: string;
 }
 
 function speak(text: string) {
   if (typeof window === "undefined") return;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "en-US";
+  u.rate = 0.9;
+  u.pitch = 1.0;
+  // Prefer a natural-sounding voice
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(
+    (v) =>
+      v.lang.startsWith("en") &&
+      (v.name.includes("Natural") ||
+        v.name.includes("Samantha") ||
+        v.name.includes("Google") ||
+        v.name.includes("Karen") ||
+        v.name.includes("Moira"))
+  );
+  if (preferred) u.voice = preferred;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);
 }
@@ -39,17 +55,20 @@ export default function QuizCard({
   onExplanationReady,
   combo,
   remainingForNext,
+  motivation,
 }: Props) {
   const [flash, setFlash] = useState<FlashState>(null);
   const [shakeKey, setShakeKey] = useState(0);
   const [showCombo, setShowCombo] = useState(false);
+  const [sentenceDone, setSentenceDone] = useState(false);
 
   const isAnswered = selected !== null;
   const isLast = questionNumber === total;
-  const { prompt, choices, correctIndex, direction, word } = question;
-  const dirLabel = direction === "en_to_ja" ? "日本語の意味は？" : "英語は？";
+  const { prompt, choices, correctIndex, word } = question;
+  // Always en_to_ja: prompt is the English word
+  const emoji = word.emoji ?? "";
 
-  useEffect(() => { setFlash(null); }, [question]);
+  useEffect(() => { setFlash(null); setSentenceDone(false); }, [question]);
 
   useEffect(() => {
     if (combo >= 2) {
@@ -62,7 +81,6 @@ export default function QuizCard({
   function handleSelect(index: number) {
     const correct = index === correctIndex;
     if (correct) {
-      // combo >= 2 means this correct answer brings it to 3+ — play Korobeiniki jingle
       if (combo >= 2) {
         playComboJingle(combo + 1);
       } else {
@@ -121,7 +139,6 @@ export default function QuizCard({
               style={{ width: `${(questionNumber / total) * 100}%` }}
             />
           </div>
-          {/* あと○問で進化 */}
           {remainingForNext > 0 && (
             <span className="text-xs text-amber-500 font-bold whitespace-nowrap">
               🥚 あと{remainingForNext}問
@@ -129,23 +146,37 @@ export default function QuizCard({
           )}
         </div>
 
-        {/* Question */}
+        {/* Question: English word + emoji hint */}
         <div className="text-center">
-          <p className="text-xs text-slate-400 mb-1">{dirLabel}</p>
-          <div className="flex items-center justify-center gap-2">
+          <p className="text-xs text-slate-400 mb-3">日本語の意味は？</p>
+
+          {/* Emoji hint (big, shown before answering) */}
+          {emoji && !isAnswered && (
+            <div className="text-5xl mb-3 select-none">{emoji}</div>
+          )}
+
+          {/* English word + speak button */}
+          <div className="flex items-center justify-center gap-3">
             <h2 className="text-3xl font-bold text-slate-800 tracking-wide">{prompt}</h2>
-            {direction === "en_to_ja" && (
-              <button
-                onClick={() => speak(word.word)}
-                className="text-slate-300 hover:text-yellow-500 transition-colors text-xl"
-                aria-label="発音を聞く"
-              >
-                🔊
-              </button>
-            )}
+            <button
+              onClick={() => speak(word.word)}
+              className="text-2xl text-slate-300 hover:text-yellow-500 active:scale-90 transition-all"
+              aria-label="発音を聞く"
+            >
+              🔊
+            </button>
           </div>
+
           {word.pos && (
             <span className="text-xs text-slate-400 mt-1 inline-block">{word.pos}</span>
+          )}
+
+          {/* Emoji + meaning revealed after answering */}
+          {isAnswered && (
+            <div className="mt-3 flex items-center justify-center gap-2 animate-check-pop">
+              {emoji && <span className="text-3xl">{emoji}</span>}
+              <span className="text-base font-bold text-slate-700">{word.meaning}</span>
+            </div>
           )}
         </div>
 
@@ -191,13 +222,22 @@ export default function QuizCard({
           </div>
         )}
 
-        {/* Explanation */}
-        {isAnswered && lastResult && (
+        {/* Sentence builder (correct answers only, before explanation) */}
+        {isAnswered && lastResult?.isCorrect && !sentenceDone && (
+          <SentenceBuilder
+            word={word}
+            motivation={motivation}
+            onDone={() => setSentenceDone(true)}
+          />
+        )}
+
+        {/* Explanation (shown once sentence builder is done, or always on incorrect) */}
+        {isAnswered && lastResult && (sentenceDone || !lastResult.isCorrect) && (
           <ExplanationPanel result={lastResult} onExplanationReady={onExplanationReady} />
         )}
 
-        {/* Next button */}
-        {isAnswered && (
+        {/* Next button (shown after sentence builder, or immediately on incorrect) */}
+        {isAnswered && (sentenceDone || !lastResult?.isCorrect) && (
           <button onClick={onNext}
             className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 active:scale-95 text-slate-800 font-bold rounded-2xl transition-all"
           >

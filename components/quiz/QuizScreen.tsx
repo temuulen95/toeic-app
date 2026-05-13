@@ -79,6 +79,7 @@ export default function QuizScreen({ words, studiedWordIds, profile, baseProgres
       onExplanationReady={handleExplanationReady}
       combo={combo}
       remainingForNext={remainingForNext}
+      motivation={profile.motivation}
     />
   );
 }

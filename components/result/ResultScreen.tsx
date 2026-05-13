@@ -20,6 +20,19 @@ function speak(text: string) {
   if (typeof window === "undefined") return;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "en-US";
+  u.rate = 0.9;
+  u.pitch = 1.0;
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(
+    (v) =>
+      v.lang.startsWith("en") &&
+      (v.name.includes("Natural") ||
+        v.name.includes("Samantha") ||
+        v.name.includes("Google") ||
+        v.name.includes("Karen") ||
+        v.name.includes("Moira"))
+  );
+  if (preferred) u.voice = preferred;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);
 }
@@ -105,7 +118,7 @@ export default function ResultScreen({
               <div className="flex items-center gap-2">
                 <span className="font-bold text-slate-800">{r.question.word.word}</span>
                 <button onClick={() => speak(r.question.word.word)}
-                  className="text-slate-300 hover:text-yellow-500 transition-colors text-base"
+                  className="text-xl text-slate-300 hover:text-yellow-500 active:scale-90 transition-all"
                   aria-label="発音"
                 >🔊</button>
               </div>
