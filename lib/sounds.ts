@@ -6,6 +6,20 @@ function getCtx(): AudioContext {
   return ctx;
 }
 
+function playNote(ac: AudioContext, freq: number, startTime: number, duration: number, vol = 0.12) {
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.type = "square";
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  gain.connect(ac.destination);
+  gain.gain.setValueAtTime(vol, startTime);
+  gain.gain.setValueAtTime(vol * 0.85, startTime + duration * 0.7);
+  gain.gain.linearRampToValueAtTime(0, startTime + duration);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.01);
+}
+
 export function playCorrect() {
   if (typeof window === "undefined") return;
   try {
@@ -34,7 +48,6 @@ export function playIncorrect() {
   try {
     const ac = getCtx();
     const now = ac.currentTime;
-    // 優しい木製タップ音：短くて柔らかい
     const osc = ac.createOscillator();
     const gain = ac.createGain();
     osc.type = "sine";
@@ -54,7 +67,6 @@ export function playLevelUp() {
   try {
     const ac = getCtx();
     const now = ac.currentTime;
-    // ファンファーレ風 4音
     [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
       const osc = ac.createOscillator();
       const gain = ac.createGain();
@@ -68,6 +80,53 @@ export function playLevelUp() {
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
       osc.start(t);
       osc.stop(t + 0.4);
+    });
+  } catch { /* ignore */ }
+}
+
+/**
+ * Korobeiniki (Tetris Theme A) inspired combo jingle.
+ * Plays a short recognizable riff from the opening melody.
+ * comboCount >= 5 triggers the extended version.
+ */
+export function playComboJingle(comboCount: number) {
+  if (typeof window === "undefined") return;
+  try {
+    const ac = getCtx();
+    const t0 = ac.currentTime;
+    const BPM = 188;
+    const Q = 60 / BPM;       // quarter note
+    const E = Q / 2;           // eighth note
+    const DQ = Q * 1.5;        // dotted quarter
+
+    // Korobeiniki opening (first 8 notes)
+    // E5 B4 C5 D5 C5 B4 A4 A4
+    const riff1: [number, number][] = [
+      [659.25, Q],    // E5
+      [493.88, E],    // B4
+      [523.25, E],    // C5
+      [587.33, Q],    // D5
+      [523.25, E],    // C5
+      [493.88, E],    // B4
+      [440.00, Q],    // A4
+      [440.00, E],    // A4 (short)
+    ];
+
+    // Extended: C5 E5 D5 C5 B4
+    const riff2: [number, number][] = [
+      [523.25, E],    // C5
+      [659.25, DQ],   // E5 (long)
+      [587.33, E],    // D5
+      [523.25, E],    // C5
+      [493.88, DQ],   // B4 (long)
+    ];
+
+    const notes = comboCount >= 5 ? [...riff1, ...riff2] : riff1;
+
+    let t = t0;
+    notes.forEach(([freq, dur]) => {
+      playNote(ac, freq, t, dur * 0.9, 0.1);
+      t += dur;
     });
   } catch { /* ignore */ }
 }

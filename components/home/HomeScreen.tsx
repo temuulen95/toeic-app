@@ -1,7 +1,7 @@
 "use client";
 
 import { UserProfile, LearningProgress } from "@/lib/types";
-import { calcProgressPercent, getEggStage, getCorrectUntilNextStage } from "@/lib/progress";
+import { calcProgressPercent, getEggStage, getCorrectUntilNextStage, getStageIndex } from "@/lib/progress";
 import EggCharacter from "./EggCharacter";
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
 export default function HomeScreen({ profile, progress, onStartQuiz }: Props) {
   const pct = calcProgressPercent(profile, progress);
   const stage = getEggStage(pct);
+  const level = getStageIndex(stage) + 1;
   const remaining = getCorrectUntilNextStage(profile, progress.totalCorrect);
 
   const today = new Date().toLocaleDateString("ja-JP", {
@@ -34,23 +35,59 @@ export default function HomeScreen({ profile, progress, onStartQuiz }: Props) {
         </div>
       </div>
 
-      <EggCharacter stage={stage} />
+      {/* Character with level badge */}
+      <div className="relative">
+        <EggCharacter stage={stage} />
+        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-amber-400 to-orange-500 text-white text-xs font-black px-2.5 py-1 rounded-full shadow-md shadow-amber-200 border-2 border-white">
+          Lv.{level}
+        </div>
+      </div>
 
-      {/* あと○問で進化 */}
+      {/* Level gauge */}
+      <div className="w-full">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-bold text-slate-600">レベル</span>
+          <span className="text-sm font-black text-amber-600">Lv.{level} / 10</span>
+        </div>
+        <div className="flex gap-1 mb-1">
+          {Array.from({ length: 10 }, (_, i) => {
+            const filled = i < level;
+            const isCurrent = i === level - 1;
+            return (
+              <div
+                key={i}
+                className={`h-3 flex-1 rounded-sm transition-all duration-500 ${
+                  isCurrent
+                    ? "bg-amber-400 shadow-sm shadow-amber-300 scale-y-125"
+                    : filled
+                    ? "bg-amber-300"
+                    : "bg-slate-100"
+                }`}
+              />
+            );
+          })}
+        </div>
+        <div className="flex justify-between text-xs text-slate-400">
+          <span>Lv.1</span>
+          <span>Lv.10</span>
+        </div>
+      </div>
+
+      {/* あと○問でレベルアップ */}
       {pct < 100 && remaining > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-2 text-center">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-2 text-center w-full">
           <span className="text-sm text-amber-700 font-bold">
-            🥚 あと <span className="text-lg text-amber-500">{remaining}</span> 問正解で進化！
+            🥚 あと <span className="text-lg text-amber-500">{remaining}</span> 問正解で Lv.{level + 1} に！
           </span>
         </div>
       )}
       {pct >= 100 && (
-        <div className="bg-yellow-50 border border-yellow-300 rounded-2xl px-4 py-2 text-center">
-          <span className="text-sm text-yellow-700 font-bold">🎉 目標達成！おめでとう！</span>
+        <div className="bg-yellow-50 border border-yellow-300 rounded-2xl px-4 py-2 text-center w-full">
+          <span className="text-sm text-yellow-700 font-bold">🎉 Lv.MAX 達成！おめでとう！</span>
         </div>
       )}
 
-      {/* Progress bar */}
+      {/* Progress bar (目標スコア) */}
       <div className="w-full">
         <div className="flex justify-between text-sm mb-1">
           <span className="text-slate-500">目標スコアまで</span>

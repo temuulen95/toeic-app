@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Question, QuizResult, WordExplanation } from "@/lib/types";
-import { playCorrect, playIncorrect } from "@/lib/sounds";
+import { playCorrect, playIncorrect, playComboJingle } from "@/lib/sounds";
 import ExplanationPanel from "./ExplanationPanel";
 
 interface Props {
@@ -62,7 +62,12 @@ export default function QuizCard({
   function handleSelect(index: number) {
     const correct = index === correctIndex;
     if (correct) {
-      playCorrect();
+      // combo >= 2 means this correct answer brings it to 3+ — play Korobeiniki jingle
+      if (combo >= 2) {
+        playComboJingle(combo + 1);
+      } else {
+        playCorrect();
+      }
       setFlash("correct");
     } else {
       playIncorrect();
