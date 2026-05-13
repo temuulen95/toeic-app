@@ -26,16 +26,13 @@ function speak(text: string) {
   u.lang = "en-US";
   u.rate = 0.9;
   u.pitch = 1.0;
-  // Prefer a natural-sounding voice
   const voices = window.speechSynthesis.getVoices();
   const preferred = voices.find(
-    (v) =>
-      v.lang.startsWith("en") &&
-      (v.name.includes("Natural") ||
-        v.name.includes("Samantha") ||
-        v.name.includes("Google") ||
-        v.name.includes("Karen") ||
-        v.name.includes("Moira"))
+    v => v.lang.startsWith("en") && (
+      v.name.includes("Natural") || v.name.includes("Samantha") ||
+      v.name.includes("Google")  || v.name.includes("Karen")    ||
+      v.name.includes("Moira")
+    )
   );
   if (preferred) u.voice = preferred;
   window.speechSynthesis.cancel();
@@ -44,31 +41,36 @@ function speak(text: string) {
 
 type FlashState = "correct" | "incorrect" | null;
 
+// After a correct answer the card shows:
+//   1. answer feedback banner
+//   2. SentenceBuilder  ← handles its own "次の問題へ" (calls onNext directly)
+//
+// After an incorrect answer the card shows:
+//   1. answer feedback banner
+//   2. ExplanationPanel
+//   3. "次の問題 →" button
+
 export default function QuizCard({
-  question,
-  questionNumber,
-  total,
-  selected,
-  onSelect,
-  onNext,
-  lastResult,
-  onExplanationReady,
-  combo,
-  remainingForNext,
-  motivation,
+  question, questionNumber, total, selected,
+  onSelect, onNext, lastResult, onExplanationReady,
+  combo, remainingForNext, motivation,
 }: Props) {
-  const [flash, setFlash] = useState<FlashState>(null);
-  const [shakeKey, setShakeKey] = useState(0);
-  const [showCombo, setShowCombo] = useState(false);
-  const [sentenceDone, setSentenceDone] = useState(false);
+  const [flash,         setFlash]         = useState<FlashState>(null);
+  const [shakeKey,      setShakeKey]      = useState(0);
+  const [showCombo,     setShowCombo]     = useState(false);
+  // skipped = user pressed "スキップ" in SentenceBuilder → show explanation then next btn
+  const [sbSkipped,     setSbSkipped]     = useState(false);
 
   const isAnswered = selected !== null;
-  const isLast = questionNumber === total;
+  const isLast     = questionNumber === total;
   const { prompt, choices, correctIndex, word } = question;
-  // Always en_to_ja: prompt is the English word
   const emoji = word.emoji ?? "";
 
-  useEffect(() => { setFlash(null); setSentenceDone(false); }, [question]);
+  // Reset per-question state when question changes
+  useEffect(() => {
+    setFlash(null);
+    setSbSkipped(false);
+  }, [question]);
 
   useEffect(() => {
     if (combo >= 2) {
@@ -78,32 +80,39 @@ export default function QuizCard({
     }
   }, [combo]);
 
-  function handleSelect(index: number) {
-    const correct = index === correctIndex;
+  function handleSelect(idx: number) {
+    const correct = idx === correctIndex;
     if (correct) {
-      if (combo >= 2) {
-        playComboJingle(combo + 1);
-      } else {
-        playCorrect();
-      }
+      combo >= 2 ? playComboJingle(combo + 1) : playCorrect();
       setFlash("correct");
     } else {
       playIncorrect();
       setFlash("incorrect");
-      setShakeKey((k) => k + 1);
+      setShakeKey(k => k + 1);
     }
     setTimeout(() => setFlash(null), 500);
-    onSelect(index);
+    onSelect(idx);
   }
 
   const comboLabel =
-    combo >= 5 ? "🔥🔥🔥 " + combo + " COMBO!!" :
-    combo >= 3 ? "🔥🔥 "   + combo + " COMBO!" :
-    combo >= 2 ? "🔥 "     + combo + " COMBO!" : "";
+    combo >= 5 ? `🔥🔥🔥 ${combo} COMBO!!` :
+    combo >= 3 ? `🔥🔥 ${combo} COMBO!`   :
+    combo >= 2 ? `🔥 ${combo} COMBO!`     : "";
+
+  // Decide what to show after answering
+  const showSentenceBuilder =
+    isAnswered && !!lastResult?.isCorrect && !sbSkipped;
+
+  const showExplanation =
+    isAnswered && lastResult &&
+    (!lastResult.isCorrect || sbSkipped);
+
+  const showNextBtn =
+    isAnswered && (!lastResult?.isCorrect || sbSkipped);
 
   return (
     <div className="relative">
-      {/* フラッシュオーバーレイ */}
+      {/* Flash overlays */}
       {flash === "correct" && (
         <div key={`fc-${questionNumber}-${selected}`}
           className="fixed inset-0 bg-green-400 pointer-events-none z-50 animate-flash-correct" />
@@ -113,7 +122,7 @@ export default function QuizCard({
           className="fixed inset-0 bg-red-300 pointer-events-none z-50 animate-flash-incorrect" />
       )}
 
-      {/* コンボバナー */}
+      {/* Combo banner */}
       {showCombo && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-combo-pop">
           <div className="bg-orange-500 text-white font-black px-6 py-2 rounded-full text-lg shadow-lg shadow-orange-300">
@@ -128,7 +137,7 @@ export default function QuizCard({
           flash === "incorrect" ? "animate-wrong-shake" : ""
         }`}
       >
-        {/* Progress */}
+        {/* Progress bar */}
         <div className="flex items-center gap-3">
           <span className="text-xs font-medium text-slate-400">
             {questionNumber} / {total}
@@ -146,16 +155,16 @@ export default function QuizCard({
           )}
         </div>
 
-        {/* Question: English word + emoji hint */}
+        {/* Question */}
         <div className="text-center">
           <p className="text-xs text-slate-400 mb-3">日本語の意味は？</p>
 
-          {/* Emoji hint (big, shown before answering) */}
+          {/* Emoji hint (only before answering) */}
           {emoji && !isAnswered && (
             <div className="text-5xl mb-3 select-none">{emoji}</div>
           )}
 
-          {/* English word + speak button */}
+          {/* Word + speak button */}
           <div className="flex items-center justify-center gap-3">
             <h2 className="text-3xl font-bold text-slate-800 tracking-wide">{prompt}</h2>
             <button
@@ -183,7 +192,7 @@ export default function QuizCard({
         {/* Choices */}
         <div className="flex flex-col gap-3">
           {choices.map((choice, i) => {
-            const isCorrectChoice = i === correctIndex;
+            const isCorrectChoice  = i === correctIndex;
             const isSelectedChoice = i === selected;
             let cls = "w-full py-4 px-5 rounded-2xl border-2 text-base font-semibold transition-all duration-200 text-left ";
             if (!isAnswered) {
@@ -203,7 +212,7 @@ export default function QuizCard({
                 <span className="font-bold mr-3 text-slate-400">{i === 0 ? "A" : "B"}</span>
                 {choice}
                 {isAnswered && isCorrectChoice && (
-                  <span className="ml-2 inline-block animate-check-pop origin-center">✓</span>
+                  <span className="ml-2 inline-block animate-check-pop">✓</span>
                 )}
                 {isAnswered && isSelectedChoice && !isCorrectChoice && (
                   <span className="ml-2">✗</span>
@@ -213,32 +222,41 @@ export default function QuizCard({
           })}
         </div>
 
-        {/* 正解/不正解バナー */}
+        {/* Answer result banner */}
         {isAnswered && lastResult && (
           <div className={`text-center text-sm font-bold py-2 rounded-xl ${
-            lastResult.isCorrect ? "bg-green-100 text-green-700" : "bg-red-50 text-red-600"
+            lastResult.isCorrect
+              ? "bg-green-100 text-green-700"
+              : "bg-red-50 text-red-600"
           }`}>
-            {lastResult.isCorrect ? "🎉 正解！" : `❌ 不正解 — 正解: ${choices[correctIndex]}`}
+            {lastResult.isCorrect
+              ? "🎉 正解！"
+              : `❌ 不正解 — 正解: ${choices[correctIndex]}`}
           </div>
         )}
 
-        {/* Sentence builder (correct answers only, before explanation) */}
-        {isAnswered && lastResult?.isCorrect && !sentenceDone && (
+        {/* ── Sentence Builder（正解時） ── */}
+        {showSentenceBuilder && (
           <SentenceBuilder
             word={word}
             motivation={motivation}
-            onDone={() => setSentenceDone(true)}
+            onNext={onNext}           // 完了→次の問題
+            onSkip={() => setSbSkipped(true)}  // スキップ→解説表示
           />
         )}
 
-        {/* Explanation (shown once sentence builder is done, or always on incorrect) */}
-        {isAnswered && lastResult && (sentenceDone || !lastResult.isCorrect) && (
-          <ExplanationPanel result={lastResult} onExplanationReady={onExplanationReady} />
+        {/* ── AI解説（不正解 or スキップ後） ── */}
+        {showExplanation && (
+          <ExplanationPanel
+            result={lastResult!}
+            onExplanationReady={onExplanationReady}
+          />
         )}
 
-        {/* Next button (shown after sentence builder, or immediately on incorrect) */}
-        {isAnswered && (sentenceDone || !lastResult?.isCorrect) && (
-          <button onClick={onNext}
+        {/* ── 次へボタン（不正解 or スキップ後） ── */}
+        {showNextBtn && (
+          <button
+            onClick={onNext}
             className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 active:scale-95 text-slate-800 font-bold rounded-2xl transition-all"
           >
             {isLast ? "結果を見る 🎉" : "つぎの問題 →"}
