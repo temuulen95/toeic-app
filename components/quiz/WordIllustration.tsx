@@ -204,7 +204,9 @@ function BookIcon() {
   );
 }
 
-const ICON_MAP: Record<string, () => JSX.Element> = {
+import { ReactElement } from "react";
+
+const ICON_MAP: Record<string, () => ReactElement> = {
   document:   DocumentIcon,
   meeting:    MeetingIcon,
   money:      MoneyIcon,
