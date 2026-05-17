@@ -32,3 +32,17 @@ export function getCorrectUntilNextStage(
   const needed = Math.ceil((nextPct / 100) * gap);
   return Math.max(0, needed - totalCorrect);
 }
+
+// Returns how many % remain until next level-up (0-100)
+export function getPercentToNextLevel(
+  profile: UserProfile,
+  progress: LearningProgress
+): number {
+  const gap = profile.targetScore - profile.currentScore;
+  if (gap <= 0) return 0;
+  const pct = Math.min(100, (progress.totalCorrect / gap) * 100);
+  if (pct >= 100) return 0;
+  const currentLevelFloor = Math.floor(pct / 10) * 10;
+  const withinLevel = pct - currentLevelFloor; // 0..10
+  return Math.round(withinLevel * 10); // 0..100%
+}

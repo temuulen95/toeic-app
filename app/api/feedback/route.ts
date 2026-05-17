@@ -5,54 +5,39 @@ const client = new Anthropic();
 
 export async function POST(request: Request) {
   const { result }: { result: QuizResult } = await request.json();
+  const { question } = result;
+  const { word } = question;
 
-  const { question, selectedIndex, isCorrect } = result;
-  const { word, direction, choices, correctIndex } = question;
+  const isCorrect = result.isCorrect;
+  const explanationInstruction = isCorrect
+    ? "なぜこれが正解なのか、使いどころや語感のポイントを1〜2文で"
+    : "覚え方・ニュアンスを1〜2文で";
 
-  const correctAnswer = choices[correctIndex];
-  const selectedAnswer = choices[selectedIndex];
-  const dirLabel = direction === "en_to_ja" ? "英→日" : "日→英";
+  const prompt = `TOEICコーチとして、英単語「${word.word}」(${word.meaning})の解説をJSONで返してください。
 
-  const prompt = `あなたはTOEIC英語コーチです。以下の回答結果に対して日本語で簡潔に解説してください。
-
-単語: ${word.word}
-意味: ${word.meaning}
-品詞: ${word.pos ?? "不明"}
-出題形式: ${dirLabel}
-正解: ${correctAnswer}
-${!isCorrect ? `ユーザーの回答: ${selectedAnswer}（不正解）` : "ユーザーの回答: 正解"}
-
-以下の形式でJSONのみ返してください（コードブロック不要）:
+以下のJSON形式のみ（コードブロック不要）:
 {
-  "explanation": "この単語の意味・ニュアンス・覚え方の解説（2〜3文）",
-  "businessExample": "ビジネスシーンでの英語例文（日本語訳付き）",
-  "dailyExample": "日常シーンでの英語例文（日本語訳付き）"
+  "businessExample": "英語例文。（日本語訳）",
+  "dailyExample": "英語例文。（日本語訳）",
+  "explanation": "${explanationInstruction}"
 }`;
 
-  const stream = client.messages.stream({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
-  });
+  try {
+    const msg = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 400,
+      messages: [{ role: "user", content: prompt }],
+    });
 
-  const textStream = new ReadableStream({
-    async start(controller) {
-      for await (const event of stream) {
-        if (
-          event.type === "content_block_delta" &&
-          event.delta.type === "text_delta"
-        ) {
-          controller.enqueue(new TextEncoder().encode(event.delta.text));
-        }
-      }
-      controller.close();
-    },
-    cancel() {
-      stream.abort();
-    },
-  });
-
-  return new Response(textStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
-  });
+    const raw = (msg.content[0] as { type: string; text: string }).text.trim();
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+    const parsed = JSON.parse(cleaned);
+    return Response.json(parsed);
+  } catch {
+    return Response.json({
+      businessExample: `Please ${word.word} the document. (その書類を${word.meaning}してください。)`,
+      dailyExample: `Can you ${word.word} this? (これを${word.meaning}できますか？)`,
+      explanation: `「${word.word}」は「${word.meaning}」という意味です。`,
+    });
+  }
 }

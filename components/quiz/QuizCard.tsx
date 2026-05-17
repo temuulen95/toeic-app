@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Question, QuizResult, WordExplanation } from "@/lib/types";
 import { playCorrect, playIncorrect, playComboJingle } from "@/lib/sounds";
 import ExplanationPanel from "./ExplanationPanel";
-import SentenceBuilder from "./SentenceBuilder";
+import WordIllustration from "./WordIllustration";
 
 interface Props {
   question: Question;
@@ -17,7 +17,6 @@ interface Props {
   onExplanationReady: (exp: WordExplanation) => void;
   combo: number;
   remainingForNext: number;
-  motivation: string;
 }
 
 function speak(text: string) {
@@ -41,35 +40,23 @@ function speak(text: string) {
 
 type FlashState = "correct" | "incorrect" | null;
 
-// After a correct answer the card shows:
-//   1. answer feedback banner
-//   2. SentenceBuilder  ← handles its own "次の問題へ" (calls onNext directly)
-//
-// After an incorrect answer the card shows:
-//   1. answer feedback banner
-//   2. ExplanationPanel
-//   3. "次の問題 →" button
-
 export default function QuizCard({
   question, questionNumber, total, selected,
   onSelect, onNext, lastResult, onExplanationReady,
-  combo, remainingForNext, motivation,
+  combo, remainingForNext,
 }: Props) {
-  const [flash,         setFlash]         = useState<FlashState>(null);
-  const [shakeKey,      setShakeKey]      = useState(0);
-  const [showCombo,     setShowCombo]     = useState(false);
-  // skipped = user pressed "スキップ" in SentenceBuilder → show explanation then next btn
-  const [sbSkipped,     setSbSkipped]     = useState(false);
+  const [flash, setFlash] = useState<FlashState>(null);
+  const [shakeKey, setShakeKey] = useState(0);
+  const [showCombo, setShowCombo] = useState(false);
+  const [showEatAnim, setShowEatAnim] = useState(false);
 
   const isAnswered = selected !== null;
-  const isLast     = questionNumber === total;
+  const isLast = questionNumber === total;
   const { prompt, choices, correctIndex, word } = question;
-  const emoji = word.emoji ?? "";
 
-  // Reset per-question state when question changes
   useEffect(() => {
     setFlash(null);
-    setSbSkipped(false);
+    setShowEatAnim(false);
   }, [question]);
 
   useEffect(() => {
@@ -85,6 +72,8 @@ export default function QuizCard({
     if (correct) {
       combo >= 2 ? playComboJingle(combo + 1) : playCorrect();
       setFlash("correct");
+      setShowEatAnim(true);
+      setTimeout(() => setShowEatAnim(false), 1200);
     } else {
       playIncorrect();
       setFlash("incorrect");
@@ -99,16 +88,8 @@ export default function QuizCard({
     combo >= 3 ? `🔥🔥 ${combo} COMBO!`   :
     combo >= 2 ? `🔥 ${combo} COMBO!`     : "";
 
-  // Decide what to show after answering
-  const showSentenceBuilder =
-    isAnswered && !!lastResult?.isCorrect && !sbSkipped;
-
-  const showExplanation =
-    isAnswered && lastResult &&
-    (!lastResult.isCorrect || sbSkipped);
-
-  const showNextBtn =
-    isAnswered && (!lastResult?.isCorrect || sbSkipped);
+  const showExplanation = isAnswered && lastResult !== null;
+  const showNextBtn = isAnswered;
 
   return (
     <div className="relative">
@@ -159,12 +140,7 @@ export default function QuizCard({
         <div className="text-center">
           <p className="text-xs text-slate-400 mb-3">日本語の意味は？</p>
 
-          {/* Emoji hint (only before answering) */}
-          {emoji && !isAnswered && (
-            <div className="text-5xl mb-3 select-none">{emoji}</div>
-          )}
-
-          {/* Word + speak button */}
+          {/* Word + speak button (NO emoji here) */}
           <div className="flex items-center justify-center gap-3">
             <h2 className="text-3xl font-bold text-slate-800 tracking-wide">{prompt}</h2>
             <button
@@ -179,43 +155,52 @@ export default function QuizCard({
           {word.pos && (
             <span className="text-xs text-slate-400 mt-1 inline-block">{word.pos}</span>
           )}
-
-          {/* Emoji + meaning revealed after answering */}
-          {isAnswered && (
-            <div className="mt-3 flex items-center justify-center gap-2 animate-check-pop">
-              {emoji && <span className="text-3xl">{emoji}</span>}
-              <span className="text-base font-bold text-slate-700">{word.meaning}</span>
-            </div>
-          )}
         </div>
 
-        {/* Choices */}
-        <div className="flex flex-col gap-3">
+        {/* Egg eating animation (correct only) */}
+        {showEatAnim && (
+          <div className="flex items-center justify-center gap-2 py-1 animate-fade-in">
+            <span className="text-lg font-bold text-slate-600 animate-word-eaten">{word.word}</span>
+            <svg viewBox="0 0 24 28" className="w-8 h-8 animate-egg-gulp" fill="none">
+              <ellipse cx="12" cy="14.5" rx="10" ry="13" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="2"/>
+            </svg>
+            <span className="text-sm text-green-600 font-bold">パクッ！</span>
+          </div>
+        )}
+
+        {/* Choices — 2-column grid with illustrations */}
+        <div className="grid grid-cols-2 gap-3">
           {choices.map((choice, i) => {
             const isCorrectChoice  = i === correctIndex;
             const isSelectedChoice = i === selected;
-            let cls = "w-full py-4 px-5 rounded-2xl border-2 text-base font-semibold transition-all duration-200 text-left ";
+            let cls = "flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all duration-200 ";
             if (!isAnswered) {
               cls += "border-slate-200 bg-white hover:border-yellow-400 hover:bg-yellow-50 active:scale-95 cursor-pointer";
             } else if (isCorrectChoice) {
-              cls += "border-green-400 bg-green-50 text-green-800";
+              cls += "border-green-400 bg-green-50";
             } else if (isSelectedChoice) {
-              cls += "border-red-400 bg-red-50 text-red-700";
+              cls += "border-red-400 bg-red-50";
             } else {
-              cls += "border-slate-100 bg-slate-50 text-slate-400 cursor-default";
+              cls += "border-slate-100 bg-slate-50 opacity-50 cursor-default";
             }
             return (
               <button key={i} className={cls}
                 onClick={() => !isAnswered && handleSelect(i)}
                 disabled={isAnswered}
               >
-                <span className="font-bold mr-3 text-slate-400">{i === 0 ? "A" : "B"}</span>
-                {choice}
+                <WordIllustration meaning={choice} />
+                <span className={`text-xs font-bold text-center leading-snug ${
+                  isAnswered && isCorrectChoice ? "text-green-800" :
+                  isAnswered && isSelectedChoice ? "text-red-700" :
+                  "text-slate-700"
+                }`}>
+                  {choice}
+                </span>
                 {isAnswered && isCorrectChoice && (
-                  <span className="ml-2 inline-block animate-check-pop">✓</span>
+                  <span className="text-green-500 font-bold text-sm animate-check-pop">✓</span>
                 )}
                 {isAnswered && isSelectedChoice && !isCorrectChoice && (
-                  <span className="ml-2">✗</span>
+                  <span className="text-red-400 font-bold text-sm">✗</span>
                 )}
               </button>
             );
@@ -235,17 +220,7 @@ export default function QuizCard({
           </div>
         )}
 
-        {/* ── Sentence Builder（正解時） ── */}
-        {showSentenceBuilder && (
-          <SentenceBuilder
-            word={word}
-            motivation={motivation}
-            onNext={onNext}           // 完了→次の問題
-            onSkip={() => setSbSkipped(true)}  // スキップ→解説表示
-          />
-        )}
-
-        {/* ── AI解説（不正解 or スキップ後） ── */}
+        {/* AI解説（正解・不正解どちらも） */}
         {showExplanation && (
           <ExplanationPanel
             result={lastResult!}
@@ -253,13 +228,13 @@ export default function QuizCard({
           />
         )}
 
-        {/* ── 次へボタン（不正解 or スキップ後） ── */}
+        {/* 次へボタン */}
         {showNextBtn && (
           <button
             onClick={onNext}
             className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 active:scale-95 text-slate-800 font-bold rounded-2xl transition-all"
           >
-            {isLast ? "結果を見る 🎉" : "つぎの問題 →"}
+            {isLast ? "結果を見る 🎉" : "つぎへ →"}
           </button>
         )}
       </div>

@@ -20,7 +20,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
   return (
     <div className="bg-white rounded-3xl shadow-lg border border-yellow-100 p-8 max-w-sm w-full">
       <div className="flex justify-center gap-2 mb-8">
-        {dots.map((d) => (
+        {dots.map(d => (
           <div
             key={d}
             className={`h-2 rounded-full transition-all duration-300 ${
@@ -32,24 +32,24 @@ export default function OnboardingFlow({ onComplete }: Props) {
 
       {step === 1 && (
         <Step1Nickname
-          onNext={(nickname) => {
-            setPartial((p) => ({ ...p, nickname }));
+          onNext={nickname => {
+            setPartial(p => ({ ...p, nickname }));
             setStep(2);
           }}
         />
       )}
       {step === 2 && (
         <Step2Motivation
-          onNext={(motivation, careerSubType) => {
-            setPartial((p) => ({ ...p, motivation, careerSubType }));
+          onNext={motivation => {
+            setPartial(p => ({ ...p, motivation }));
             setStep(3);
           }}
         />
       )}
       {step === 3 && (
         <Step3CurrentScore
-          onNext={(currentScore) => {
-            setPartial((p) => ({ ...p, currentScore }));
+          onNext={currentScore => {
+            setPartial(p => ({ ...p, currentScore }));
             setStep(4);
           }}
         />
@@ -57,11 +57,10 @@ export default function OnboardingFlow({ onComplete }: Props) {
       {step === 4 && (
         <Step4TargetScore
           currentScore={partial.currentScore ?? 0}
-          onNext={(targetScore) => {
+          onNext={targetScore => {
             const profile: UserProfile = {
               nickname: partial.nickname!,
               motivation: partial.motivation!,
-              careerSubType: partial.careerSubType,
               currentScore: partial.currentScore!,
               targetScore,
             };

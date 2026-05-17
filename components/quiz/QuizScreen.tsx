@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Question, QuizResult, Word, WordExplanation, UserProfile, LearningProgress } from "@/lib/types";
-import { generateQuiz } from "@/lib/quiz";
+import { QuizItem, QuizResult, Word, Question, WordExplanation, UserProfile, LearningProgress } from "@/lib/types";
+import { generateQuizItems } from "@/lib/quiz";
 import { getCorrectUntilNextStage } from "@/lib/progress";
 import QuizCard from "./QuizCard";
+import SentenceBuilder from "./SentenceBuilder";
 
-const QUIZ_COUNT = 5;
+const WORD_COUNT = 5;
 
 interface Props {
   words: Word[];
@@ -17,8 +18,8 @@ interface Props {
 }
 
 export default function QuizScreen({ words, studiedWordIds, profile, baseProgress, onComplete }: Props) {
-  const [questions] = useState<Question[]>(() =>
-    generateQuiz(words, QUIZ_COUNT, studiedWordIds)
+  const [items] = useState<QuizItem[]>(() =>
+    generateQuizItems(words, WORD_COUNT, studiedWordIds, profile.currentScore)
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -27,13 +28,26 @@ export default function QuizScreen({ words, studiedWordIds, profile, baseProgres
   const [combo, setCombo] = useState(0);
   const [sessionCorrect, setSessionCorrect] = useState(0);
 
+  const currentItem = items[currentIndex];
+  const totalItems = items.length; // 10
   const runningTotal = baseProgress.totalCorrect + sessionCorrect;
   const remainingForNext = getCorrectUntilNextStage(profile, runningTotal);
 
-  function handleSelect(index: number) {
-    const q = questions[currentIndex];
+  function advance(newResults: QuizResult[]) {
+    if (currentIndex + 1 >= totalItems) {
+      onComplete(newResults);
+    } else {
+      setCurrentIndex(i => i + 1);
+      setSelected(null);
+      setPendingResult(null);
+    }
+  }
+
+  function handleMCSelect(index: number) {
+    const q = (currentItem as { kind: "mc"; question: Question }).question;
     const correct = index === q.correctIndex;
     const result: QuizResult = {
+      kind: "mc",
       question: q,
       selectedIndex: index,
       isCorrect: correct,
@@ -42,44 +56,70 @@ export default function QuizScreen({ words, studiedWordIds, profile, baseProgres
     setSelected(index);
     setPendingResult(result);
     if (correct) {
-      setCombo((c) => c + 1);
-      setSessionCorrect((c) => c + 1);
+      setCombo(c => c + 1);
+      setSessionCorrect(c => c + 1);
     } else {
       setCombo(0);
     }
   }
 
-  function handleExplanationReady(exp: WordExplanation) {
-    setPendingResult((prev) => prev ? { ...prev, explanation: exp } : prev);
+  function handleMCExplanationReady(exp: WordExplanation) {
+    setPendingResult(prev => prev ? { ...prev, explanation: exp } : prev);
   }
 
-  function handleNext() {
+  function handleMCNext() {
     const finalResult = pendingResult!;
     const newResults = [...results, finalResult];
     setResults(newResults);
+    advance(newResults);
+  }
 
-    if (currentIndex + 1 >= questions.length) {
-      onComplete(newResults);
-    } else {
-      setCurrentIndex((i) => i + 1);
-      setSelected(null);
-      setPendingResult(null);
-    }
+  function handleSPComplete(isCorrect: boolean) {
+    const spWord = (currentItem as { kind: "sp"; word: Word }).word;
+    const fakeQuestion: Question = {
+      word: spWord,
+      direction: "en_to_ja",
+      prompt: spWord.word,
+      choices: [spWord.meaning, ""],
+      correctIndex: 0,
+    };
+    const result: QuizResult = {
+      kind: "sp",
+      question: fakeQuestion,
+      selectedIndex: isCorrect ? 0 : -1,
+      isCorrect,
+      explanation: null,
+    };
+    if (isCorrect) setSessionCorrect(c => c + 1);
+    const newResults = [...results, result];
+    setResults(newResults);
+    advance(newResults);
+  }
+
+  if (currentItem.kind === "mc") {
+    return (
+      <QuizCard
+        question={currentItem.question}
+        questionNumber={currentIndex + 1}
+        total={totalItems}
+        selected={selected}
+        onSelect={handleMCSelect}
+        onNext={handleMCNext}
+        lastResult={pendingResult}
+        onExplanationReady={handleMCExplanationReady}
+        combo={combo}
+        remainingForNext={remainingForNext}
+      />
+    );
   }
 
   return (
-    <QuizCard
-      question={questions[currentIndex]}
-      questionNumber={currentIndex + 1}
-      total={questions.length}
-      selected={selected}
-      onSelect={handleSelect}
-      onNext={handleNext}
-      lastResult={pendingResult}
-      onExplanationReady={handleExplanationReady}
-      combo={combo}
-      remainingForNext={remainingForNext}
+    <SentenceBuilder
+      word={currentItem.word}
       motivation={profile.motivation}
+      questionNumber={currentIndex + 1}
+      total={totalItems}
+      onComplete={handleSPComplete}
     />
   );
 }

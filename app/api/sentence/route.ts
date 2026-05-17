@@ -38,9 +38,10 @@ JSONのみ返してください（コードブロック不要）:
   });
 
   const raw = (msg.content[0] as { type: string; text: string }).text.trim();
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
 
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(cleaned);
     // Strip any trailing punctuation just in case
     parsed.sentence = (parsed.sentence as string).replace(/[.,!?;:]+$/, "").trim();
     return Response.json(parsed);

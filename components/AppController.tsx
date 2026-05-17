@@ -7,6 +7,7 @@ import OnboardingFlow from "./onboarding/OnboardingFlow";
 import HomeScreen from "./home/HomeScreen";
 import QuizScreen from "./quiz/QuizScreen";
 import ResultScreen from "./result/ResultScreen";
+import EggCharacter from "./home/EggCharacter";
 
 export default function AppController() {
   const [phase, setPhase] = useState<AppPhase | null>(null);
@@ -36,7 +37,7 @@ export default function AppController() {
     }
 
     fetch("/api/words")
-      .then((r) => r.json())
+      .then(r => r.json())
       .then(setWords)
       .catch(() => setLoadError("単語リストの読み込みに失敗しました"));
   }, []);
@@ -53,8 +54,8 @@ export default function AppController() {
   }
 
   function handleQuizComplete(results: QuizResult[]) {
-    const correct = results.filter((r) => r.isCorrect).length;
-    const newWordIds = results.map((r) => String(r.question.word.id));
+    const correct = results.filter(r => r.isCorrect).length;
+    const newWordIds = results.map(r => String(r.question.word.id));
 
     const newProgress: LearningProgress = {
       totalAnswered: progress.totalAnswered + results.length,
@@ -73,7 +74,7 @@ export default function AppController() {
   if (phase === null) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-4xl animate-bounce">🥚</div>
+        <EggCharacter stage="s0" />
       </div>
     );
   }

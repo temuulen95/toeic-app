@@ -1,8 +1,7 @@
 export interface UserProfile {
   nickname: string;
   motivation: "career" | "overseas_assignment" | "travel";
-  careerSubType?: "job_change" | "promotion";
-  currentScore: number;
+  currentScore: number;  // 0 = わからない
   targetScore: number;
 }
 
@@ -39,6 +38,11 @@ export interface Question {
   correctIndex: 0 | 1;
 }
 
+// 10-question structure: alternating MC + SP pairs
+export type QuizItem =
+  | { kind: "mc"; question: Question }
+  | { kind: "sp"; word: Word };
+
 export interface WordExplanation {
   explanation: string;
   businessExample: string;
@@ -46,8 +50,9 @@ export interface WordExplanation {
 }
 
 export interface QuizResult {
+  kind: "mc" | "sp";
   question: Question;
-  selectedIndex: number;
+  selectedIndex: number; // sp: 0=correct, -1=incorrect
   isCorrect: boolean;
   explanation: WordExplanation | null;
 }

@@ -109,10 +109,10 @@ export default function HomeScreen({ profile, progress, onStartQuiz }: Props) {
         onClick={onStartQuiz}
         className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 active:scale-95 text-slate-800 font-bold text-lg rounded-2xl transition-all shadow-sm shadow-yellow-200"
       >
-        🎯 今日の5問を始める
+        🎯 今日の10問を始める
       </button>
 
-      <p className="text-xs text-slate-400">1日5分 · 5問でコンプリート</p>
+      <p className="text-xs text-slate-400">1日5分 · 10問でコンプリート</p>
     </div>
   );
 }

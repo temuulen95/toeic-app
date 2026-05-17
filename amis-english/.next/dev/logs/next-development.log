@@ -1,0 +1,42 @@
+{"timestamp":"00:03:43.066","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.070","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.070","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.096","source":"Server","level":"ERROR","message":"⨯ PageNotFoundError: Cannot find module for page: route not found /_not-found/page"}
+{"timestamp":"00:03:43.479","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, open '/Users/tem/Desktop/toeic-app/amis-english/.next/dev/static/development/_buildManifest.js.tmp.v6jim7poq3'"}
+{"timestamp":"00:03:43.480","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.484","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.484","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.486","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.486","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.488","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.489","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.490","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.490","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.492","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.492","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.493","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.494","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.495","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.495","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.496","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.497","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.498","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.498","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.500","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:03:43.500","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:44.234","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:44.236","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:45.205","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:45.207","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:45.710","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:45.711","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:46.246","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:46.248","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:46.905","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:46.908","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:56.828","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:04:56.829","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:05:21.111","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:05:21.113","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:05:21.728","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
+{"timestamp":"00:05:21.730","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/tem/Desktop/toeic-app/amis-english/app'"}
