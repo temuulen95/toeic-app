@@ -112,7 +112,7 @@ export default function HomeScreen({ profile, progress, onStartQuiz }: Props) {
         🎯 今日の10問を始める
       </button>
 
-      <p className="text-xs text-slate-400">1日5分 · 10問でコンプリート</p>
+      <p className="text-xs text-slate-400">1日10分 · 10問でコンプリート</p>
     </div>
   );
 }

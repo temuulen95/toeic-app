@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { AppPhase, LearningProgress, QuizResult, UserProfile, Word } from "@/lib/types";
 import { getProfile, getProgress, saveProfile, saveProgress } from "@/lib/storage";
+import { unlockAudio } from "@/lib/sounds";
 import OnboardingFlow from "./onboarding/OnboardingFlow";
 import HomeScreen from "./home/HomeScreen";
 import QuizScreen from "./quiz/QuizScreen";
@@ -10,6 +12,7 @@ import ResultScreen from "./result/ResultScreen";
 import EggCharacter from "./home/EggCharacter";
 
 export default function AppController() {
+  const { user, isLoaded } = useUser();
   const [phase, setPhase] = useState<AppPhase | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [progress, setProgress] = useState<LearningProgress>({
@@ -24,9 +27,27 @@ export default function AppController() {
   const [progressSnapshot, setProgressSnapshot] = useState<LearningProgress>(progress);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Unlock Web Audio API on first user interaction (required for iOS Safari)
   useEffect(() => {
-    const savedProfile = getProfile();
-    const savedProgress = getProgress();
+    const unlock = () => {
+      unlockAudio();
+      window.removeEventListener("touchstart", unlock, true);
+      window.removeEventListener("mousedown", unlock, true);
+    };
+    window.addEventListener("touchstart", unlock, true);
+    window.addEventListener("mousedown", unlock, true);
+    return () => {
+      window.removeEventListener("touchstart", unlock, true);
+      window.removeEventListener("mousedown", unlock, true);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+
+    const userId = user.id;
+    const savedProfile = getProfile(userId);
+    const savedProgress = getProgress(userId);
     setProgress(savedProgress);
 
     if (savedProfile) {
@@ -40,10 +61,11 @@ export default function AppController() {
       .then(r => r.json())
       .then(setWords)
       .catch(() => setLoadError("単語リストの読み込みに失敗しました"));
-  }, []);
+  }, [isLoaded, user]);
 
   function handleOnboardingComplete(newProfile: UserProfile) {
-    saveProfile(newProfile);
+    if (!user) return;
+    saveProfile(user.id, newProfile);
     setProfile(newProfile);
     setPhase("home");
   }
@@ -54,6 +76,7 @@ export default function AppController() {
   }
 
   function handleQuizComplete(results: QuizResult[]) {
+    if (!user) return;
     const correct = results.filter(r => r.isCorrect).length;
     const newWordIds = results.map(r => String(r.question.word.id));
 
@@ -65,13 +88,13 @@ export default function AppController() {
       lastStudiedAt: new Date().toISOString(),
     };
 
-    saveProgress(newProgress);
+    saveProgress(user.id, newProgress);
     setProgress(newProgress);
     setQuizResults(results);
     setPhase("result");
   }
 
-  if (phase === null) {
+  if (!isLoaded || phase === null) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <EggCharacter stage="s0" />

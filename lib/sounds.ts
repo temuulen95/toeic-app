@@ -1,8 +1,30 @@
 let ctx: AudioContext | null = null;
 
+// iOS Safari requires AudioContext to be created AND resumed inside a user gesture.
+// We defer creation until the first interaction, then play a silent buffer to unlock.
+export function unlockAudio(): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (!ctx || ctx.state === "closed") {
+      ctx = new AudioContext();
+    }
+    const resume = ctx.resume();
+    // Play a silent 1-frame buffer — required for older iOS to fully unlock
+    resume.then(() => {
+      if (!ctx) return;
+      const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    }).catch(() => {});
+  } catch { /* ignore */ }
+}
+
 function getCtx(): AudioContext {
   if (!ctx || ctx.state === "closed") ctx = new AudioContext();
-  if (ctx.state === "suspended") ctx.resume();
+  // Best-effort resume (works on desktop; no-op on locked iOS — unlockAudio() handles that)
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});
   return ctx;
 }
 
@@ -25,7 +47,6 @@ export function playCorrect() {
   try {
     const ac = getCtx();
     const now = ac.currentTime;
-    // C5 → E5 → G5 上昇アルペジオ
     [523.25, 659.25, 783.99].forEach((freq, i) => {
       const osc = ac.createOscillator();
       const gain = ac.createGain();
@@ -84,45 +105,25 @@ export function playLevelUp() {
   } catch { /* ignore */ }
 }
 
-/**
- * Korobeiniki (Tetris Theme A) inspired combo jingle.
- * Plays a short recognizable riff from the opening melody.
- * comboCount >= 5 triggers the extended version.
- */
 export function playComboJingle(comboCount: number) {
   if (typeof window === "undefined") return;
   try {
     const ac = getCtx();
     const t0 = ac.currentTime;
     const BPM = 188;
-    const Q = 60 / BPM;       // quarter note
-    const E = Q / 2;           // eighth note
-    const DQ = Q * 1.5;        // dotted quarter
+    const Q = 60 / BPM;
+    const E = Q / 2;
+    const DQ = Q * 1.5;
 
-    // Korobeiniki opening (first 8 notes)
-    // E5 B4 C5 D5 C5 B4 A4 A4
     const riff1: [number, number][] = [
-      [659.25, Q],    // E5
-      [493.88, E],    // B4
-      [523.25, E],    // C5
-      [587.33, Q],    // D5
-      [523.25, E],    // C5
-      [493.88, E],    // B4
-      [440.00, Q],    // A4
-      [440.00, E],    // A4 (short)
+      [659.25, Q], [493.88, E], [523.25, E], [587.33, Q],
+      [523.25, E], [493.88, E], [440.00, Q], [440.00, E],
     ];
-
-    // Extended: C5 E5 D5 C5 B4
     const riff2: [number, number][] = [
-      [523.25, E],    // C5
-      [659.25, DQ],   // E5 (long)
-      [587.33, E],    // D5
-      [523.25, E],    // C5
-      [493.88, DQ],   // B4 (long)
+      [523.25, E], [659.25, DQ], [587.33, E], [523.25, E], [493.88, DQ],
     ];
 
     const notes = comboCount >= 5 ? [...riff1, ...riff2] : riff1;
-
     let t = t0;
     notes.forEach(([freq, dur]) => {
       playNote(ac, freq, t, dur * 0.9, 0.1);

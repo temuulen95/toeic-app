@@ -48,7 +48,6 @@ export default function QuizCard({
   const [flash, setFlash] = useState<FlashState>(null);
   const [shakeKey, setShakeKey] = useState(0);
   const [showCombo, setShowCombo] = useState(false);
-  const [showEatAnim, setShowEatAnim] = useState(false);
 
   const isAnswered = selected !== null;
   const isLast = questionNumber === total;
@@ -56,7 +55,6 @@ export default function QuizCard({
 
   useEffect(() => {
     setFlash(null);
-    setShowEatAnim(false);
   }, [question]);
 
   useEffect(() => {
@@ -72,8 +70,6 @@ export default function QuizCard({
     if (correct) {
       combo >= 2 ? playComboJingle(combo + 1) : playCorrect();
       setFlash("correct");
-      setShowEatAnim(true);
-      setTimeout(() => setShowEatAnim(false), 1200);
     } else {
       playIncorrect();
       setFlash("incorrect");
@@ -156,17 +152,6 @@ export default function QuizCard({
             <span className="text-xs text-slate-400 mt-1 inline-block">{word.pos}</span>
           )}
         </div>
-
-        {/* Egg eating animation (correct only) */}
-        {showEatAnim && (
-          <div className="flex items-center justify-center gap-2 py-1 animate-fade-in">
-            <span className="text-lg font-bold text-slate-600 animate-word-eaten">{word.word}</span>
-            <svg viewBox="0 0 24 28" className="w-8 h-8 animate-egg-gulp" fill="none">
-              <ellipse cx="12" cy="14.5" rx="10" ry="13" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="2"/>
-            </svg>
-            <span className="text-sm text-green-600 font-bold">パクッ！</span>
-          </div>
-        )}
 
         {/* Choices — 2-column grid with illustrations */}
         <div className="grid grid-cols-2 gap-3">

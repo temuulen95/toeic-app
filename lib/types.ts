@@ -47,6 +47,7 @@ export interface WordExplanation {
   explanation: string;
   businessExample: string;
   dailyExample: string;
+  wrongAnswerNote?: string;
 }
 
 export interface QuizResult {

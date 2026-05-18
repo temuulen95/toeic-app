@@ -300,38 +300,44 @@ export default function SentenceBuilder({ word, motivation, questionNumber, tota
                 )}
 
                 {/* Action buttons */}
-                <div className="flex gap-2">
-                  {phase === "playing" && placed.length > 0 && (
-                    <button
-                      onClick={reset}
-                      className="flex-1 py-3 border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all active:scale-95"
-                    >
-                      🔄 リセット
-                    </button>
-                  )}
-                  {phase === "incorrect" && (
-                    <>
-                      <button
-                        onClick={reset}
-                        className="flex-1 py-3 bg-amber-400 hover:bg-amber-500 text-slate-800 font-bold rounded-xl text-sm transition-all active:scale-95"
-                      >
-                        もう一度
-                      </button>
-                      <button
-                        onClick={reveal}
-                        className="flex-1 py-3 border-2 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-sm transition-all active:scale-95"
-                      >
-                        正解を見る
-                      </button>
-                    </>
-                  )}
+                <div className="flex flex-col gap-2">
+                  {/* Sub-action row */}
+                  {(phase === "playing" && placed.length > 0) || phase === "incorrect" ? (
+                    <div className="flex gap-2">
+                      {phase === "playing" && placed.length > 0 && (
+                        <button
+                          onClick={reset}
+                          className="flex-1 h-11 whitespace-nowrap border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all active:scale-95"
+                        >
+                          🔄 リセット
+                        </button>
+                      )}
+                      {phase === "incorrect" && (
+                        <>
+                          <button
+                            onClick={reset}
+                            className="flex-1 h-11 whitespace-nowrap border-2 border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-xl text-sm font-bold transition-all active:scale-95"
+                          >
+                            🔄 もう一度
+                          </button>
+                          <button
+                            onClick={reveal}
+                            className="flex-1 h-11 whitespace-nowrap border-2 border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all active:scale-95"
+                          >
+                            📖 正解を見る
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ) : null}
+                  {/* Primary CTA */}
                   {(phase === "correct" || phase === "incorrect") && (
                     <button
                       onClick={() => onComplete(phase === "correct" && !usedReveal)}
-                      className={`w-full py-3 font-bold rounded-xl text-sm transition-all active:scale-95 ${
+                      className={`w-full h-12 font-bold rounded-xl text-sm transition-all active:scale-95 shadow-sm ${
                         phase === "correct"
-                          ? "bg-green-500 hover:bg-green-600 text-white"
-                          : "bg-slate-700 hover:bg-slate-800 text-white"
+                          ? "bg-yellow-400 hover:bg-yellow-500 text-slate-800"
+                          : "bg-yellow-400 hover:bg-yellow-500 text-slate-800"
                       }`}
                     >
                       {isLast ? "結果を見る 🎉" : "つぎへ →"}
