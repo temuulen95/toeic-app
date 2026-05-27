@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Question, QuizResult, WordExplanation } from "@/lib/types";
-import { playCorrect, playIncorrect, playComboJingle } from "@/lib/sounds";
+import { playCorrect, playIncorrect } from "@/lib/sounds";
 import ExplanationPanel from "./ExplanationPanel";
 
 interface Props {
@@ -67,7 +67,7 @@ export default function QuizCard({
   function handleSelect(idx: number) {
     const correct = idx === correctIndex;
     if (correct) {
-      combo >= 2 ? playComboJingle(combo + 1) : playCorrect();
+      playCorrect();
       setFlash("correct");
     } else {
       playIncorrect();
@@ -191,15 +191,9 @@ export default function QuizCard({
         </div>
 
         {/* Answer result banner */}
-        {isAnswered && lastResult && (
-          <div className={`text-center text-sm font-bold py-2 rounded-xl ${
-            lastResult.isCorrect
-              ? "bg-green-100 text-green-700"
-              : "bg-red-50 text-red-600"
-          }`}>
-            {lastResult.isCorrect
-              ? "🎉 正解！"
-              : `❌ 不正解 — 正解: ${choices[correctIndex]}`}
+        {isAnswered && lastResult && lastResult.isCorrect && (
+          <div className="text-center text-sm font-bold py-2 rounded-xl bg-green-100 text-green-700">
+            🎉 正解！
           </div>
         )}
 

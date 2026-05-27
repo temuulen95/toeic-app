@@ -105,29 +105,3 @@ export function playLevelUp() {
   } catch { /* ignore */ }
 }
 
-export function playComboJingle(comboCount: number) {
-  if (typeof window === "undefined") return;
-  try {
-    const ac = getCtx();
-    const t0 = ac.currentTime;
-    const BPM = 188;
-    const Q = 60 / BPM;
-    const E = Q / 2;
-    const DQ = Q * 1.5;
-
-    const riff1: [number, number][] = [
-      [659.25, Q], [493.88, E], [523.25, E], [587.33, Q],
-      [523.25, E], [493.88, E], [440.00, Q], [440.00, E],
-    ];
-    const riff2: [number, number][] = [
-      [523.25, E], [659.25, DQ], [587.33, E], [523.25, E], [493.88, DQ],
-    ];
-
-    const notes = comboCount >= 5 ? [...riff1, ...riff2] : riff1;
-    let t = t0;
-    notes.forEach(([freq, dur]) => {
-      playNote(ac, freq, t, dur * 0.9, 0.1);
-      t += dur;
-    });
-  } catch { /* ignore */ }
-}
