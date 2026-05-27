@@ -9,17 +9,19 @@ const SCENE_MAP: Record<string, string> = {
 };
 
 export async function POST(request: Request) {
-  const { word, meaning, motivation } = await request.json() as {
+  const { word, meaning, motivation, level } = await request.json() as {
     word: string;
     meaning: string;
     motivation: string;
+    level?: number;
   };
 
   const scene = SCENE_MAP[motivation] ?? "ビジネス";
+  const levelLabel = level === 1 ? "初級（L1）" : level === 2 ? "中級（L2）" : level === 3 ? "上級（L3）" : "";
 
   const prompt = `英語の例文を1つ生成してください。
 
-単語: "${word}" (${meaning})
+単語: "${word}" (${meaning})${levelLabel ? `\n難易度: ${levelLabel}` : ""}
 シーン: ${scene}
 
 条件（厳守）:

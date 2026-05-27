@@ -22,6 +22,7 @@ export async function POST(request: Request) {
   const motivationLabel = MOTIVATION_LABEL[motivation] ?? "TOEIC学習";
   const correctRate = Math.round((correct / total) * 100);
   const wrongList = wrongWords.length > 0 ? wrongWords.join("・") : "なし";
+  const correctList = correctWords.length > 0 ? correctWords.join("・") : "なし";
 
   const prompt = `あなたはTOEICコーチです。口調は前向き・励ます・親しみやすく。
 
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
 - 目的：${motivationLabel}
 - 現在スコア：${currentScore > 0 ? `${currentScore}点` : "未設定"}（目標：${targetScore}点）
 - 正解率：${correct}/${total}問（${correctRate}%）
+- 正解した単語：${correctList}
 - 間違えた単語：${wrongList}
 
 【指示】

@@ -54,7 +54,7 @@ export default function SentenceBuilder({ word, motivation, questionNumber, tota
     fetch("/api/sentence", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: word.word, meaning: word.meaning, motivation }),
+      body: JSON.stringify({ word: word.word, meaning: word.meaning, motivation, level: word.level }),
     })
       .then(r => { if (!r.ok) throw new Error("server error"); return r.json(); })
       .then((d: SentenceData) => {
@@ -197,7 +197,7 @@ export default function SentenceBuilder({ word, motivation, questionNumber, tota
                       fetch("/api/sentence", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ word: word.word, meaning: word.meaning, motivation }),
+                        body: JSON.stringify({ word: word.word, meaning: word.meaning, motivation, level: word.level }),
                       })
                         .then(r => { if (!r.ok) throw new Error(); return r.json(); })
                         .then((d: SentenceData) => {

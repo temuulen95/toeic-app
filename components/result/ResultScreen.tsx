@@ -83,6 +83,7 @@ export default function ResultScreen({
   const [showConfetti, setShowConfetti] = useState(false);
   const [showHatch, setShowHatch] = useState(false);
   const [bannerDone, setBannerDone] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
 
   useEffect(() => {
     if (leveledUp) {
@@ -91,6 +92,28 @@ export default function ResultScreen({
       return () => { clearTimeout(t1); if (t2) clearTimeout(t2); };
     }
   }, [leveledUp, isHatching]);
+
+  useEffect(() => {
+    const wrongWords  = results.filter(r => !r.isCorrect).map(r => r.question.word.word);
+    const correctWords = results.filter(r => r.isCorrect).map(r => r.question.word.word);
+    fetch("/api/summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        motivation: profile.motivation,
+        currentScore: profile.currentScore,
+        targetScore: profile.targetScore,
+        correct,
+        total,
+        wrongWords,
+        correctWords,
+      }),
+    })
+      .then(r => r.json())
+      .then(d => { if (d.summary) setSummary(d.summary); })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const scoreEmoji = correct === total ? "🎉" : correct >= total * 0.6 ? "👍" : "💪";
   const eggComment = getEggComment(stageAfter, correctRate);
@@ -148,6 +171,19 @@ export default function ResultScreen({
             <p className="text-xs text-yellow-600 font-bold ml-auto">🎉 MAX!</p>
           )}
         </div>
+      </div>
+
+      {/* AI summary */}
+      <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-bold text-amber-700">🤖 AIコーチより</span>
+          {!summary && <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />}
+        </div>
+        {summary ? (
+          <p className="text-sm text-slate-700 leading-relaxed">{summary}</p>
+        ) : (
+          <p className="text-xs text-slate-400 animate-pulse">コメントを生成中...</p>
+        )}
       </div>
 
       {/* Per-question breakdown */}

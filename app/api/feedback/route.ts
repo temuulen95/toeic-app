@@ -20,6 +20,8 @@ export async function POST(request: Request) {
   const correctChoice = question.choices[question.correctIndex];
   const motivationLabel = MOTIVATION_LABEL[motivation ?? ""] ?? "TOEIC学習";
   const posLabel = word.pos ? `（品詞：${word.pos}）` : "";
+  const levelLabel = word.level === 1 ? "初級（L1）" : word.level === 2 ? "中級（L2）" : word.level === 3 ? "上級（L3）" : "";
+  const levelNote = levelLabel ? `難易度：${levelLabel}` : "";
 
   const explanationInstruction = isCorrect
     ? `「${word.word}」の使いどころ・語感のポイントを、${motivationLabel}の文脈で1〜2文で`
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
 
   const prompt = `あなたはTOEICコーチです。口調は励ます・前向きで、親しみやすく簡潔に。
 
-対象単語：「${word.word}」${posLabel}（意味：${word.meaning}）
+対象単語：「${word.word}」${posLabel}（意味：${word.meaning}）${levelNote ? `\n${levelNote}` : ""}
 学習者の目的：${motivationLabel}
 
 以下のJSON形式のみで返してください（コードブロック不要）:
