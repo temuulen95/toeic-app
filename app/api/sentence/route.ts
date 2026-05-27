@@ -23,13 +23,14 @@ export async function POST(request: Request) {
 シーン: ${scene}
 条件:
 - 必ず"${word}"を使う
-- 単語数は厳密に5語以内（5語を超えてはいけない）
+- 単語数は厳密に5語以内（主語＋動詞を含む完全な文にすること）
+- 文が途中で切れてはいけない。5語で自然に完結する文のみ
 - TOEIC学習者向けの自然な文
 - ピリオドなど句読点を一切含めない
-- 簡単な単語で構成する
+- 例: "Costs rose this fiscal year" / "She quit her old job"
 
 JSONのみ返してください（コードブロック不要）:
-{"sentence": "例文（句読点なし・5語以内）", "translation": "日本語訳"}`;
+{"sentence": "完全な文（句読点なし・5語以内）", "translation": "日本語訳"}`;
 
   const msg = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
@@ -43,9 +44,6 @@ JSONのみ返してください（コードブロック不要）:
   try {
     const parsed = JSON.parse(cleaned);
     parsed.sentence = (parsed.sentence as string).replace(/[.,!?;:]+$/, "").trim();
-    // Enforce 5-word limit
-    const words = parsed.sentence.split(/\s+/).filter(Boolean);
-    if (words.length > 5) parsed.sentence = words.slice(0, 5).join(" ");
     return Response.json(parsed);
   } catch {
     return Response.json({ error: "parse failed" }, { status: 500 });

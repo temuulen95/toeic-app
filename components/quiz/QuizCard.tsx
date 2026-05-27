@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Question, QuizResult, WordExplanation } from "@/lib/types";
 import { playCorrect, playIncorrect, playComboJingle } from "@/lib/sounds";
 import ExplanationPanel from "./ExplanationPanel";
-import WordIllustration from "./WordIllustration";
 
 interface Props {
   question: Question;
@@ -173,8 +172,7 @@ export default function QuizCard({
                 onClick={() => !isAnswered && handleSelect(i)}
                 disabled={isAnswered}
               >
-                <WordIllustration meaning={choice} />
-                <span className={`text-xs font-bold text-center leading-snug ${
+                <span className={`text-sm font-bold text-center leading-snug py-2 ${
                   isAnswered && isCorrectChoice ? "text-green-800" :
                   isAnswered && isSelectedChoice ? "text-red-700" :
                   "text-slate-700"
