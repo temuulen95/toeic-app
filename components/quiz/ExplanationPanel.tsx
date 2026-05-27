@@ -5,7 +5,8 @@ import { QuizResult, WordExplanation } from "@/lib/types";
 
 interface Props {
   result: QuizResult;
-  onExplanationReady: (exp: WordExplanation) => void;
+  motivation: string;
+  onExplanationReady?: (exp: WordExplanation) => void;
 }
 
 // Extract a complete JSON string value from partial JSON text
@@ -27,7 +28,7 @@ const FIELDS: (keyof WordExplanation)[] = [
   "explanation",
 ];
 
-export default function ExplanationPanel({ result, onExplanationReady }: Props) {
+export default function ExplanationPanel({ result, motivation, onExplanationReady }: Props) {
   const [data, setData] = useState<Partial<WordExplanation>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export default function ExplanationPanel({ result, onExplanationReady }: Props) 
         const res = await fetch("/api/feedback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ result }),
+          body: JSON.stringify({ result, motivation }),
           signal: controller.signal,
         });
 
@@ -82,7 +83,7 @@ export default function ExplanationPanel({ result, onExplanationReady }: Props) 
                 setData(parsed);
                 if (!readyCalled.current) {
                   readyCalled.current = true;
-                  onExplanationReady(parsed);
+                  onExplanationReady?.(parsed);
                 }
               } catch {
                 const acc = accRef.current;
@@ -95,7 +96,7 @@ export default function ExplanationPanel({ result, onExplanationReady }: Props) 
                 setData(final);
                 if (!readyCalled.current) {
                   readyCalled.current = true;
-                  onExplanationReady(final);
+                  onExplanationReady?.(final);
                 }
               }
               break outer;
@@ -140,52 +141,47 @@ export default function ExplanationPanel({ result, onExplanationReady }: Props) 
   const hasData = Object.keys(data).length > 0;
 
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
+    <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-3 space-y-2">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <span className="font-black text-slate-800">{word.word}</span>
-        <span className="text-amber-700 font-bold text-sm">{word.meaning}</span>
+        <span className="font-black text-slate-800 text-sm">{word.word}</span>
+        <span className="text-amber-700 font-bold text-xs">{word.meaning}</span>
         {loading && (
           <div className="ml-auto w-3 h-3 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
         )}
       </div>
 
       {!hasData && loading ? (
-        <div className="text-slate-400 text-sm animate-pulse">解説を生成中...</div>
+        <div className="text-slate-400 text-xs animate-pulse">解説を生成中...</div>
       ) : (
         <>
-          {/* Wrong answer note — streams first, displayed first */}
           {data.wrongAnswerNote && (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-              <p className="text-red-700 text-xs leading-relaxed font-medium">
-                ❌ {data.wrongAnswerNote}
-              </p>
-            </div>
+            <p className="text-red-700 text-xs leading-relaxed bg-red-50 rounded-lg px-2 py-1.5 font-medium">
+              ❌ {data.wrongAnswerNote}
+            </p>
           )}
 
-          {/* Examples */}
-          <div className="space-y-2">
-            <div className="bg-white rounded-xl p-4 border border-amber-100">
-              <div className="text-xs font-bold text-amber-600 mb-2">💼 ビジネス例文</div>
+          <div className="space-y-1.5">
+            <div className="bg-white rounded-xl px-3 py-2 border border-amber-100">
+              <span className="text-xs font-bold text-amber-600">💼 </span>
               {data.businessExample ? (
-                <p className="text-base font-semibold text-slate-800 leading-relaxed">{data.businessExample}</p>
+                <span className="text-xs text-slate-800 leading-relaxed">{data.businessExample}</span>
               ) : (
-                <div className="h-5 bg-amber-100 rounded-lg animate-pulse" />
+                <span className="inline-block w-32 h-3 bg-amber-100 rounded animate-pulse align-middle" />
               )}
             </div>
-            <div className="bg-white rounded-xl p-4 border border-amber-100">
-              <div className="text-xs font-bold text-sky-600 mb-2">🌸 日常例文</div>
+            <div className="bg-white rounded-xl px-3 py-2 border border-amber-100">
+              <span className="text-xs font-bold text-sky-600">🌸 </span>
               {data.dailyExample ? (
-                <p className="text-base font-semibold text-slate-800 leading-relaxed">{data.dailyExample}</p>
+                <span className="text-xs text-slate-800 leading-relaxed">{data.dailyExample}</span>
               ) : (
-                <div className="h-5 bg-sky-100 rounded-lg animate-pulse" />
+                <span className="inline-block w-32 h-3 bg-sky-100 rounded animate-pulse align-middle" />
               )}
             </div>
           </div>
 
-          {/* Explanation */}
           {data.explanation && (
-            <p className="text-slate-400 text-xs leading-relaxed border-t border-amber-100 pt-2">
+            <p className="text-slate-400 text-xs leading-relaxed border-t border-amber-100 pt-1.5">
               {data.explanation}
             </p>
           )}

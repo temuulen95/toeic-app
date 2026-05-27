@@ -27,9 +27,10 @@ interface Props {
   questionNumber: number;
   total: number;
   onComplete: (isCorrect: boolean) => void;
+  onFeedback?: (phase: "correct" | "incorrect", sentence: string, translation: string) => void;
 }
 
-export default function SentenceBuilder({ word, motivation, questionNumber, total, onComplete }: Props) {
+export default function SentenceBuilder({ word, motivation, questionNumber, total, onComplete, onFeedback }: Props) {
   const [data,    setData]    = useState<SentenceData | null>(null);
   const [phase,   setPhase]   = useState<Phase>("loading");
   const [bank,    setBank]    = useState<Chip[]>([]);
@@ -85,10 +86,12 @@ export default function SentenceBuilder({ word, motivation, questionNumber, tota
         playCorrect();
         triggerFlash("correct");
         setPhase("correct");
+        onFeedback?.("correct", dat.sentence, dat.translation);
       } else {
         playIncorrect();
         triggerFlash("incorrect");
         setPhase("incorrect");
+        onFeedback?.("incorrect", dat.sentence, dat.translation);
       }
     }, 350);
     return () => clearTimeout(id);
@@ -146,7 +149,7 @@ export default function SentenceBuilder({ word, motivation, questionNumber, tota
         <div className="fixed inset-0 bg-red-400 pointer-events-none z-[60] animate-flash-incorrect" />
       )}
 
-      <div className={`bg-white rounded-3xl shadow-lg border border-yellow-100 p-6 max-w-sm w-full flex flex-col gap-4`}>
+      <div className={`bg-white rounded-3xl shadow-lg border border-yellow-100 p-4 max-w-sm w-full flex flex-col gap-3`}>
         {/* Progress bar */}
         <div className="flex items-center gap-3">
           <span className="text-xs font-medium text-slate-400">
@@ -274,28 +277,6 @@ export default function SentenceBuilder({ word, motivation, questionNumber, tota
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {/* Correct feedback */}
-                {phase === "correct" && (
-                  <div className="bg-green-100 rounded-xl p-3 border border-green-200">
-                    <div className="flex items-center gap-2 text-green-700 font-black text-base mb-1">
-                      <span>{usedReveal ? "📖" : "🎉"}</span>
-                      {usedReveal ? "正解はこちら！" : "正解！すばらしい！"}
-                    </div>
-                    <p className="text-sm text-slate-600 leading-relaxed">{data.translation}</p>
-                  </div>
-                )}
-
-                {/* Incorrect feedback */}
-                {phase === "incorrect" && (
-                  <div className="bg-red-50 rounded-xl p-3 border border-red-200 space-y-2">
-                    <div className="text-red-600 font-black text-sm">❌ 惜しい！正しい順番はこちら：</div>
-                    <p className="text-slate-800 font-bold text-sm bg-white rounded-lg px-3 py-2 border border-red-100">
-                      {data.sentence}
-                    </p>
-                    <p className="text-xs text-slate-500">{data.translation}</p>
                   </div>
                 )}
 

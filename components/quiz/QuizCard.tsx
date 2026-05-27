@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Question, QuizResult, WordExplanation } from "@/lib/types";
+import { Question, QuizResult } from "@/lib/types";
 import { playCorrect, playIncorrect } from "@/lib/sounds";
-import ExplanationPanel from "./ExplanationPanel";
 
 interface Props {
   question: Question;
@@ -13,7 +12,6 @@ interface Props {
   onSelect: (index: number) => void;
   onNext: () => void;
   lastResult: QuizResult | null;
-  onExplanationReady: (exp: WordExplanation) => void;
   combo: number;
   remainingForNext: number;
 }
@@ -41,7 +39,7 @@ type FlashState = "correct" | "incorrect" | null;
 
 export default function QuizCard({
   question, questionNumber, total, selected,
-  onSelect, onNext, lastResult, onExplanationReady,
+  onSelect, onNext, lastResult,
   combo, remainingForNext,
 }: Props) {
   const [flash, setFlash] = useState<FlashState>(null);
@@ -83,7 +81,6 @@ export default function QuizCard({
     combo >= 3 ? `🔥🔥 ${combo} COMBO!`   :
     combo >= 2 ? `🔥 ${combo} COMBO!`     : "";
 
-  const showExplanation = isAnswered && lastResult !== null;
   const showNextBtn = isAnswered;
 
   return (
@@ -109,7 +106,7 @@ export default function QuizCard({
 
       <div
         key={shakeKey > 0 ? `shake-${shakeKey}` : "card"}
-        className={`bg-white rounded-3xl shadow-lg border border-yellow-100 p-6 max-w-sm w-full flex flex-col gap-5 ${
+        className={`bg-white rounded-3xl shadow-lg border border-yellow-100 p-4 max-w-sm w-full flex flex-col gap-3 ${
           flash === "incorrect" ? "animate-wrong-shake" : ""
         }`}
       >
@@ -157,7 +154,7 @@ export default function QuizCard({
           {choices.map((choice, i) => {
             const isCorrectChoice  = i === correctIndex;
             const isSelectedChoice = i === selected;
-            let cls = "flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all duration-200 ";
+            let cls = "flex flex-col items-center gap-1 rounded-2xl border-2 p-2 transition-all duration-200 ";
             if (!isAnswered) {
               cls += "border-slate-200 bg-white hover:border-yellow-400 hover:bg-yellow-50 active:scale-95 cursor-pointer";
             } else if (isCorrectChoice) {
@@ -172,7 +169,7 @@ export default function QuizCard({
                 onClick={() => !isAnswered && handleSelect(i)}
                 disabled={isAnswered}
               >
-                <span className={`text-sm font-bold text-center leading-snug py-2 ${
+                <span className={`text-sm font-bold text-center leading-snug py-1 ${
                   isAnswered && isCorrectChoice ? "text-green-800" :
                   isAnswered && isSelectedChoice ? "text-red-700" :
                   "text-slate-700"
@@ -189,21 +186,6 @@ export default function QuizCard({
             );
           })}
         </div>
-
-        {/* Answer result banner */}
-        {isAnswered && lastResult && lastResult.isCorrect && (
-          <div className="text-center text-sm font-bold py-2 rounded-xl bg-green-100 text-green-700">
-            🎉 正解！
-          </div>
-        )}
-
-        {/* AI解説（正解・不正解どちらも） */}
-        {showExplanation && (
-          <ExplanationPanel
-            result={lastResult!}
-            onExplanationReady={onExplanationReady}
-          />
-        )}
 
         {/* 次へボタン */}
         {showNextBtn && (

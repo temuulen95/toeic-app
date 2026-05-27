@@ -21,16 +21,18 @@ export async function POST(request: Request) {
 
 単語: "${word}" (${meaning})
 シーン: ${scene}
-条件:
+
+条件（厳守）:
 - 必ず"${word}"を使う
-- 単語数は厳密に5語以内（主語＋動詞を含む完全な文にすること）
-- 文が途中で切れてはいけない。5語で自然に完結する文のみ
-- TOEIC学習者向けの自然な文
-- ピリオドなど句読点を一切含めない
-- 例: "Costs rose this fiscal year" / "She quit her old job"
+- 単語数は3〜5語（それ以上は不可）
+- 主語＋動詞を含む完全で自然な文
+- 文法的に正確な英語
+- 句読点（.,!?;:）を一切含めない
+- 良い例: "She missed the deadline" / "Costs rose last year" / "He quit his job" / "We need more staff"
+- 悪い例（途中で切れている）: "She missed" / "The deadline was"
 
 JSONのみ返してください（コードブロック不要）:
-{"sentence": "完全な文（句読点なし・5語以内）", "translation": "日本語訳"}`;
+{"sentence": "3〜5語の完全な文", "translation": "日本語訳"}`;
 
   const msg = await client.messages.create({
     model: "claude-haiku-4-5-20251001",

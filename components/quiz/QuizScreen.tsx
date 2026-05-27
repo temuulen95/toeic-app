@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { QuizItem, QuizResult, Word, Question, WordExplanation, UserProfile, LearningProgress } from "@/lib/types";
+import { QuizItem, QuizResult, Word, Question, UserProfile, LearningProgress } from "@/lib/types";
 import { generateQuizItems } from "@/lib/quiz";
 import { calcProgressPercent, getEggStage, getCorrectUntilNextStage } from "@/lib/progress";
 import EggCharacter from "@/components/home/EggCharacter";
 import QuizCard from "./QuizCard";
 import SentenceBuilder from "./SentenceBuilder";
+import ExplanationPanel from "./ExplanationPanel";
 
 const WORD_COUNT = 5;
 
@@ -29,7 +30,7 @@ export default function QuizScreen({ words, studiedWordIds, profile, baseProgres
   const [combo, setCombo] = useState(0);
   const [sessionCorrect, setSessionCorrect] = useState(0);
   const [eggMood, setEggMood] = useState<"happy" | "sad" | null>(null);
-  const [eggSpeech, setEggSpeech] = useState<string | null>(null);
+  const [spFeedback, setSpFeedback] = useState<{ phase: "correct" | "incorrect"; sentence: string; translation: string } | null>(null);
 
   const currentItem = items[currentIndex];
   const totalItems = items.length;
@@ -40,7 +41,7 @@ export default function QuizScreen({ words, studiedWordIds, profile, baseProgres
 
   function advance(newResults: QuizResult[]) {
     setEggMood(null);
-    setEggSpeech(null);
+    setSpFeedback(null);
     if (currentIndex + 1 >= totalItems) {
       onComplete(newResults);
     } else {
@@ -63,7 +64,6 @@ export default function QuizScreen({ words, studiedWordIds, profile, baseProgres
     setSelected(index);
     setPendingResult(result);
     setEggMood(correct ? "happy" : "sad");
-    setEggSpeech(null);
     if (correct) {
       setCombo(c => c + 1);
       setSessionCorrect(c => c + 1);
@@ -72,17 +72,16 @@ export default function QuizScreen({ words, studiedWordIds, profile, baseProgres
     }
   }
 
-  function handleMCExplanationReady(exp: WordExplanation) {
-    setPendingResult(prev => prev ? { ...prev, explanation: exp } : prev);
-    const speech = exp.wrongAnswerNote || exp.explanation;
-    if (speech) setEggSpeech(speech);
-  }
-
   function handleMCNext() {
     const finalResult = pendingResult!;
     const newResults = [...results, finalResult];
     setResults(newResults);
     advance(newResults);
+  }
+
+  function handleSPFeedback(phase: "correct" | "incorrect", sentence: string, translation: string) {
+    setSpFeedback({ phase, sentence, translation });
+    setEggMood(phase === "correct" ? "happy" : "sad");
   }
 
   function handleSPComplete(isCorrect: boolean) {
@@ -107,26 +106,31 @@ export default function QuizScreen({ words, studiedWordIds, profile, baseProgres
     advance(newResults);
   }
 
-  const eggSection = (
-    <div className="flex flex-col items-center gap-2 w-full">
-      <div className={eggMood === "happy" ? "animate-egg-sway" : eggMood === "sad" ? "animate-wrong-shake" : ""}>
-        <EggCharacter stage={eggStage} />
-      </div>
-      {eggSpeech && (
-        <div className="relative bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-2 max-w-[300px] text-center">
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0
-            border-l-[6px] border-r-[6px] border-b-[8px]
-            border-l-transparent border-r-transparent border-b-yellow-200" />
-          <p className="text-xs font-bold text-yellow-800 leading-relaxed">{eggSpeech}</p>
-        </div>
-      )}
+  const eggEl = (
+    <div className={eggMood === "happy" ? "animate-egg-sway" : eggMood === "sad" ? "animate-wrong-shake" : ""}>
+      <EggCharacter stage={eggStage} />
     </div>
   );
 
   if (currentItem.kind === "mc") {
     return (
       <div className="flex flex-col items-center w-full max-w-sm gap-4">
-        {eggSection}
+        <div className="flex flex-col items-center gap-2 w-full">
+          {eggEl}
+          {pendingResult && (
+            <>
+              <div className={`text-sm font-black px-4 py-1 rounded-full ${
+                pendingResult.isCorrect ? "text-green-700 bg-green-100" : "text-red-600 bg-red-100"
+              }`}>
+                {pendingResult.isCorrect ? "🎉 正解！" : "❌ 不正解"}
+              </div>
+              <ExplanationPanel
+                result={pendingResult}
+                motivation={profile.motivation}
+              />
+            </>
+          )}
+        </div>
         <QuizCard
           question={currentItem.question}
           questionNumber={currentIndex + 1}
@@ -135,7 +139,6 @@ export default function QuizScreen({ words, studiedWordIds, profile, baseProgres
           onSelect={handleMCSelect}
           onNext={handleMCNext}
           lastResult={pendingResult}
-          onExplanationReady={handleMCExplanationReady}
           combo={combo}
           remainingForNext={remainingForNext}
         />
@@ -145,13 +148,36 @@ export default function QuizScreen({ words, studiedWordIds, profile, baseProgres
 
   return (
     <div className="flex flex-col items-center w-full max-w-sm gap-4">
-      {eggSection}
+      <div className="flex flex-col items-center gap-2 w-full">
+        {eggEl}
+        {spFeedback && (
+          <div className={`w-full rounded-2xl border-2 p-4 space-y-2 ${
+            spFeedback.phase === "correct"
+              ? "bg-green-50 border-green-300"
+              : "bg-red-50 border-red-300"
+          }`}>
+            {spFeedback.phase === "correct" ? (
+              <>
+                <div className="font-black text-green-700 text-sm">🎉 正解！すばらしい！</div>
+                <p className="text-slate-600 text-sm leading-relaxed">{spFeedback.translation}</p>
+              </>
+            ) : (
+              <>
+                <div className="font-black text-red-600 text-sm">❌ 惜しい！正しい順番はこちら：</div>
+                <p className="font-bold text-slate-800 text-sm bg-white rounded-lg px-3 py-2 border border-red-100">{spFeedback.sentence}</p>
+                <p className="text-xs text-slate-500">{spFeedback.translation}</p>
+              </>
+            )}
+          </div>
+        )}
+      </div>
       <SentenceBuilder
         word={currentItem.word}
         motivation={profile.motivation}
         questionNumber={currentIndex + 1}
         total={totalItems}
         onComplete={handleSPComplete}
+        onFeedback={handleSPFeedback}
       />
     </div>
   );

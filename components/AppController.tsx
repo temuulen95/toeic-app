@@ -112,7 +112,7 @@ export default function AppController() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-amber-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-amber-50 flex flex-col items-center justify-start py-4 px-4">
       {phase === "onboarding" && (
         <OnboardingFlow onComplete={handleOnboardingComplete} />
       )}

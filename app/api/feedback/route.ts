@@ -3,8 +3,14 @@ import { QuizResult } from "@/lib/types";
 
 const client = new Anthropic();
 
+const MOTIVATION_LABEL: Record<string, string> = {
+  career:              "キャリアアップ・転職",
+  overseas_assignment: "海外赴任・グローバルビジネス",
+  travel:              "海外旅行・日常英会話",
+};
+
 export async function POST(request: Request) {
-  const { result }: { result: QuizResult } = await request.json();
+  const { result, motivation }: { result: QuizResult; motivation?: string } = await request.json();
   const { question } = result;
   const { word } = question;
 
@@ -12,28 +18,32 @@ export async function POST(request: Request) {
   const isMCWrong = !isCorrect && result.kind === "mc" && result.selectedIndex >= 0;
   const wrongChoice = isMCWrong ? question.choices[result.selectedIndex] : null;
   const correctChoice = question.choices[question.correctIndex];
+  const motivationLabel = MOTIVATION_LABEL[motivation ?? ""] ?? "TOEIC学習";
+  const posLabel = word.pos ? `（品詞：${word.pos}）` : "";
 
   const explanationInstruction = isCorrect
-    ? "なぜこれが正解なのか、使いどころや語感のポイントを1〜2文で"
-    : "覚え方・ニュアンスを1〜2文で";
+    ? `「${word.word}」の使いどころ・語感のポイントを、${motivationLabel}の文脈で1〜2文で`
+    : `「${word.word}」の覚え方・ニュアンスを、${motivationLabel}の視点で1〜2文で`;
 
-  // wrongAnswerNote is first so it streams to the client first (displayed at top)
   const jsonFormat = isMCWrong
     ? `{
   "wrongAnswerNote": "あなたが選んだ「${wrongChoice}」について：その英単語（または日本語に対応する英単語）を明示し、正解の「${correctChoice}」と混同しやすい理由を1文で",
-  "businessExample": "英語例文。（日本語訳）",
-  "dailyExample": "英語例文。（日本語訳）",
+  "businessExample": "${motivationLabel}シーンの英語例文。（日本語訳）",
+  "dailyExample": "日常会話での英語例文。（日本語訳）",
   "explanation": "${explanationInstruction}"
 }`
     : `{
-  "businessExample": "英語例文。（日本語訳）",
-  "dailyExample": "英語例文。（日本語訳）",
+  "businessExample": "${motivationLabel}シーンの英語例文。（日本語訳）",
+  "dailyExample": "日常会話での英語例文。（日本語訳）",
   "explanation": "${explanationInstruction}"
 }`;
 
-  const prompt = `TOEICコーチとして、英単語「${word.word}」(${word.meaning})の解説をJSONで返してください。
+  const prompt = `あなたはTOEICコーチです。口調は励ます・前向きで、親しみやすく簡潔に。
 
-以下のJSON形式のみ（コードブロック不要）:
+対象単語：「${word.word}」${posLabel}（意味：${word.meaning}）
+学習者の目的：${motivationLabel}
+
+以下のJSON形式のみで返してください（コードブロック不要）:
 ${jsonFormat}`;
 
   const encoder = new TextEncoder();
